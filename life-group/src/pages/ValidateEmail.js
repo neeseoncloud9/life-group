@@ -32,7 +32,7 @@ const ValidateEmail = (axios) => {
         <h3>2. Click The Button In Email.</h3>
         {
             err &&
-            <h3 className="center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
+            <h3 className="text-center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
         }
         <h3>Would You Like To Send Another Email?</h3>
         <button className="login-submit" onClick={()=>{window.location.href = '/sendVerify'}}>Send Another Email</button>

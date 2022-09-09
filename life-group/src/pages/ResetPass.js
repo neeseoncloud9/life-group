@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const Logout = (axios) => {
+const ResetPass = (axios) => {
     const [err, setErr]                 = useState("");
     const [errMsg, setErrMsg]           = useState("");
     const _axios                        = axios.axios;
@@ -20,16 +20,15 @@ const Logout = (axios) => {
         });
     }
 
-    logout();
-
     return (
         <>
         {
             err &&
             <h3 className="text-center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
         }
+        <span>reset pass here</span>
         </>
     )
 };
 
-export default Logout;
+export default ResetPass;

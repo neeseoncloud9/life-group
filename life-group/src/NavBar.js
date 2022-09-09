@@ -11,9 +11,14 @@ const NavBar = (user) => {
                 </li>
                 {
                     LoggedIn &&
+                    <>
+                    <li>
+                        <Link to="/adminArea">Admin Panel</Link>
+                    </li>
                     <li>
                         <Link to="/logout">Logout</Link>
                     </li>
+                    </>
                 }
                 {
                     !LoggedIn &&

@@ -13,6 +13,7 @@ const Login = (props) => {
     const [errMsg, setErrMsg]                     = useState("");
     const [validEmail, setValidEmail]             = useState(true);
     const [validPass, setValidPass]               = useState(true);
+    const [badLogIn, setBadLogIn]                 = useState(0);
     const [searchParams, setSearchParams]         = useSearchParams();
     const getValidEmailParam                      = searchParams.get("validateEmail");
     const getUserIDParam                          = searchParams.get("userID");
@@ -96,7 +97,7 @@ const Login = (props) => {
 
     const login = (e) => {
         e.preventDefault();
-        if (validEmail && validPass) {
+        if (validEmail && validPass && badLogIn <= 8) {
             _axios.post('http://localhost:3001/login', {
                 email: usernameReg,
                 password: passwordReg,
@@ -106,12 +107,18 @@ const Login = (props) => {
             }).then((result) => {
                 console.log(result.data.msg);
                 if (result.data.error) {
+                    if (result.data.msg === 'wrong password or email') {
+                        setBadLogIn(badLogIn+1);
+                    }
                     setErr(result.data.error);
                     setErrMsg(result.data.msg);
                 } else if (result.data.msg === 'success') {
                     window.location.href = '/adminArea';
                 }
             });
+        } else if (badLogIn >= 8) {
+            setErr(true);
+            setErrMsg('No More Attempts Allowed. <a href="/resetPass">Reset Password Here</a>');
         }
     }
 
@@ -120,7 +127,7 @@ const Login = (props) => {
         {/* <img src='https://static.wixstatic.com/media/969550_4b065ae8c0cf4b09ba656c4d8f977a21~mv2.png'></img> */}
         {
             err &&
-            <h3 className="center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
+            <h3 className="text-center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
         }
         <form className="login-form">
             {

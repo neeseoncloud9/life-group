@@ -35,7 +35,7 @@ const sendVerify = (axios) => {
         <>
         {
             err &&
-            <h3 className="center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
+            <h3 className="text-center error-msg" dangerouslySetInnerHTML={{__html: errMsg}}></h3>
         }
         <form className="login-form">
             <input

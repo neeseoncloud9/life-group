@@ -16,7 +16,9 @@ import ValidateEmail from './pages/ValidateEmail';
 import SendVerify from './pages/SendVerify';
 import AdminArea from './pages/AdminArea';
 import NavBar from './NavBar';
+import ResetPass from './pages/ResetPass';
 import './App.css';
+
 const axios = require('axios').default;
 
 const App = () => {
@@ -54,6 +56,7 @@ const App = () => {
               <Route path='/adminArea' element={<AdminArea props={{axios:axios, user:user}}/>} />
               <Route path='/login' element={<Login props={{axios:axios, user:user}}/>} />
               <Route path='/logout' element={<Logout axios={axios}/>} />
+              <Route path='/resetPass' element={<ResetPass axios={axios}/>} />
               <Route path='/validateEmail' element={<ValidateEmail axios={axios}/>} />
               <Route path='/sendVerify' element={<SendVerify axios={axios}/>} />
               <Route path='/articles-list' element={<ArticlesListPage/>} />
