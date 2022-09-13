@@ -83,14 +83,8 @@ const sendInstruction = (template_id, temp_data, to_email) => {
     });
 }
 
-const sendVerifyEmail = (result, userID, toEmail, res) => {
-    const encodedID = Buffer.from(String(userID)).toString('base64');
-    const temp_data = {
-        "name": result[0].name,
-        "userID": encodedID,
-        "hostURL": process.env.DEV_URL,
-    };
-    const resultSend = sendInstruction('d-b513575420a744fd9a66d0499146bfcd', temp_data, toEmail);
+const sendEmail = (temp_data, toEmail, res, tempID) => {
+    const resultSend = sendInstruction(tempID, temp_data, toEmail);
     resultSend.then((sendGridResponse) => {
         if (sendGridResponse === 'Accepted') {
             res.json({
@@ -217,7 +211,13 @@ app.post('/sendValidate', (req, res) => {
                 console.log(err);
             } else if (result.length !== 0) {
                 if (result[0].valid_email !== 1) {
-                    sendVerifyEmail(result, req.session.userID, req.session.key, res);
+                    const encodedID = Buffer.from(String(req.session.userID)).toString('base64');
+                    const temp_data = {
+                        "name": result[0].name,
+                        "userID": encodedID,
+                        "hostURL": process.env.DEV_URL,
+                    };
+                    sendEmail(temp_data, req.session.key, res, 'd-b513575420a744fd9a66d0499146bfcd');
                 } else if (result[0].valid_email === 1) {
                     res.json({
                         error:true,
@@ -227,7 +227,7 @@ app.post('/sendValidate', (req, res) => {
             }
         });
     } else if (req.body.email) {
-        db.query("SELECT ID, valid_email FROM users WHERE email = ?",
+        db.query("SELECT ID, valid_email, name FROM users WHERE email = ?",
         [req.body.email],
         (err, result) => {
             if (err) {
@@ -239,7 +239,13 @@ app.post('/sendValidate', (req, res) => {
             } else if (result.length !== 0) {
                 console.log(result);
                 if (result[0].valid_email !== 1) {
-                    sendVerifyEmail(result, result[0].ID, req.body.email, res);
+                    const encodedID = Buffer.from(String(result[0].ID)).toString('base64');
+                    const temp_data = {
+                        "name": result[0].name,
+                        "userID": encodedID,
+                        "hostURL": process.env.DEV_URL,
+                    };
+                    sendEmail(temp_data, req.body.email, res, 'd-b513575420a744fd9a66d0499146bfcd');
                 } else if (result[0].valid_email === 1) {
                     res.json({
                         error:true,
@@ -257,6 +263,119 @@ app.post('/sendValidate', (req, res) => {
         res.json({
             error:true,
             msg: 'invalid email'
+        })
+    }
+})
+
+app.post('/resetPass', (req, res) => {
+    const email = req.body.email;
+    const pass  = req.body.pass ? req.body.pass : null;
+    if (email) {
+        db.query("SELECT ID FROM users WHERE email = ? AND valid_email = 1",
+        [email],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                res.json({
+                    error:true,
+                    msg:err
+                });
+            } else if (result.length !== 0) {
+                const encodedID = Buffer.from(String(result[0].ID)).toString('base64');
+                const verifyStr = uuidv4();
+                db.query(`UPDATE users SET reset_pass_str = '${verifyStr}' WHERE ID = ?`,
+                [result[0].ID],
+                (err, result) => {
+                    if (err) {
+                        console.log(err);
+                        res.json({
+                            error:true,
+                            msg:err
+                        });
+                    } else {
+                        const temp_data = {
+                            "verifiedStr": verifyStr,
+                            "userID": encodedID,
+                            "hostURL": process.env.DEV_URL,
+                        };
+                        sendEmail(temp_data, email, res, 'd-7c3b2ab7d00f475e8e353da65c286f25');
+                    }
+                });
+            } else {
+                res.json({
+                    error:true,
+                    msg: 'Sign Up First Or Verify Email <a href="/login">Sign Up Here<a/>'
+                });
+            }
+        });
+    } else if (pass) {
+        const userID   = req.body.userID ? req.body.userID : 0;
+        const verified = req.body.verified ? req.body.verified : '';
+        db.query("SELECT reset_pass_str FROM users WHERE ID = ?",
+        [userID],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                res.json({
+                    error:true,
+                    msg:err
+                });
+            } else if (result.length !== 0) {
+                if (result[0].reset_pass_str === verified) {
+                    bcrypt.genSalt(10, function(err, salt) {
+                        if (err) {
+                            console.log(err);
+                            res.json({
+                                error:true,
+                                msg:err
+                            });
+                        } else {
+                            bcrypt.hash(pass, salt, function(err, hash) {
+                                if (err) {
+                                    console.log(err);
+                                    res.json({
+                                        error:true,
+                                        msg:err
+                                    });
+                                } else {
+                                    db.query(`UPDATE users SET password = ?, reset_pass_str = NULL WHERE ID = ${userID}`,
+                                        [hash],
+                                        (err, result) => {
+                                            if (err) {
+                                                console.log(err);
+                                                res.json({
+                                                    error:true,
+                                                    msg:err,
+                                                });
+                                            } else {
+                                                res.json({
+                                                    error:false,
+                                                    msg:'success changing password'
+                                                });
+                                            }
+                                        }
+                                    );
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    res.json({
+                        error: true,
+                        msg: 'Not Verified'
+                    })
+                }
+            } else {
+                res.json({
+                    error: true,
+                    msg: 'Not Verified'
+                })
+            }
+        });
+    } else {
+        res.json({
+            error: true,
+            msg: 'No Email Provided'
         })
     }
 })
