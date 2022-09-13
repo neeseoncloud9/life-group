@@ -11,8 +11,11 @@ const Login = (props) => {
     const [signUp, setSignUp]                     = useState("");
     const [err, setErr]                           = useState("");
     const [errMsg, setErrMsg]                     = useState("");
-    const [validEmail, setValidEmail]             = useState(true);
-    const [validPass, setValidPass]               = useState(true);
+    const [signUpSubmit, setSignUpSubmit]         = useState(false);
+    const [loginSubmit, setLoginSubmit]           = useState(false);
+    const [validEmail, setValidEmail]             = useState(false);
+    const [validPass, setValidPass]               = useState(false);
+    const [validPassReg, setValidPassReg]         = useState(false);
     const [badLogIn, setBadLogIn]                 = useState(0);
     const [searchParams, setSearchParams]         = useSearchParams();
     const getValidEmailParam                      = searchParams.get("validateEmail");
@@ -38,14 +41,10 @@ const Login = (props) => {
         });
     }
 
-    console.log(user);
-    if (user) {
-        window.location.href = '/adminArea';
-    }
-
     const register = (e) => {
         e.preventDefault();
-        if (validEmail && validPass) {
+        if (validEmail && validPassReg) {
+            setSignUpSubmit(true);
             _axios.post('http://localhost:3001/register', {
                 fullName: fullName,
                 email: usernameReg,
@@ -55,6 +54,7 @@ const Login = (props) => {
                 withCredentials: true
             }).then((result) => {
                 if (result.data.error) {
+                    setSignUpSubmit(false);
                     setErr(result.data.error);
                     setErrMsg(result.data.msg);
                 } else if (result.data.msg === 'success adding user') {
@@ -174,7 +174,6 @@ const Login = (props) => {
                     className="login-password"
                     onChange={(e) => {
                         setPasswordRegAgain(e.target.value);
-                        validatePass(e.target.value);
                     }}
                     required={true}
                     placeholder="Password"
@@ -185,15 +184,22 @@ const Login = (props) => {
                     minLength={10}
                     value={passwordReg}
                     valueAgain={passwordRegAgain}
-                    onChange={(isValid) => {}}
+                    onChange={(isValid) => {setValidPassReg(isValid)}}
                 />
-                <button className="login-submit" onClick={register}>Register</button>
+                {
+                    !signUpSubmit &&
+                    <button className="login-submit" onClick={register}>Register</button>
+                }
+                <button className="login-submit" onClick={() => {window.location.href = '/login'}}>Login</button>
                 </>
             }
             {
                 !signUp &&
                 <>
-                <button className="login-submit" onClick={(e) => {login(e)}}>Login</button>
+                {
+                    !loginSubmit &&
+                    <button className="login-submit" onClick={(e) => {login(e)}}>Login</button>
+                }
                 <button className="login-submit" onClick={() => {setSignUp(true)}}>Sign Up</button>
                 </>
             }
