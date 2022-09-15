@@ -100,6 +100,35 @@ const sendEmail = (temp_data, toEmail, res, tempID) => {
     })
 }
 
+app.get('/', (req, res) => {
+    const url = req.headers.origin.includes('https') ? req.headers.origin.replace('https://','') : req.headers.origin.replace('http://','');
+    console.log(url);
+
+    db.query(`SELECT lg.*
+            FROM churches c
+            LEFT JOIN life_groups lg
+            ON c.ID = lg.church_id
+            WHERE url = ?
+            AND deleted != 1
+            AND display = 1`,
+    [url],
+    (err, result) => {
+        if (err) {
+            console.log(err);
+            res.json({
+                error:true,
+                msg:err
+            });
+        } else if (result.length !== 0) {
+            res.json({
+                error:false,
+                msg:'success',
+                life_groups:result,
+            })
+        }
+    });
+})
+
 app.get('/isLoggedIn', (req, res) => {
     console.log(req.sessionStore.sessions);
     console.log(req.session.isLoggedIn);

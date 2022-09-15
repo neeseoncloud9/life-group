@@ -51,7 +51,7 @@ const App = () => {
           <NavBar user={user}/>
           <div id="page-body">
             <Routes>
-              <Route path='/' element={<HomePage/>} exact/>
+              <Route path='/' element={<HomePage props={{axios:axios}}/>} exact/>
               <Route path='/about' element={<AboutPage/>} />
               <Route path='/adminArea' element={<AdminArea props={{axios:axios, user:user}}/>} />
               <Route path='/login' element={<Login props={{axios:axios, user:user}}/>} />
