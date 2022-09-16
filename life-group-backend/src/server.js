@@ -100,8 +100,48 @@ const sendEmail = (temp_data, toEmail, res, tempID) => {
     })
 }
 
+const sendEmailMultiple = (temp_data, toEmails, res, tempID, sendErrorToAdmin = false) => {
+    for (let i = 0; i < toEmails.length; i++) {
+        const resultSend = sendInstruction(tempID, temp_data, toEmails[i]);
+        resultSend.then((sendGridResponse) => {
+            if (sendGridResponse === 'Accepted' && i === (toEmails.length - 1)) {
+                res.json({
+                    error:false,
+                    msg: sendGridResponse
+                })
+            } else if (sendGridResponse !== 'Accepted') {
+                if (sendErrorToAdmin) {
+                    sendErrorAdmin(sendErrorToAdmin.church_id, sendErrorToAdmin.error_msg);
+                }
+                res.json({
+                    error:true,
+                    msg: sendGridResponse
+                })
+                return;
+            }
+        })
+    }
+}
+
+const sendErrorAdmin = (church_id, error_msg) => {
+    db.query(`SELECT email
+            FROM users
+            WHERE church_id = ?
+            AND role = 1`,
+    [church_id],
+    (err, result) => {
+        if (result.length !== 0) {
+            const error_data = {
+                "error":error_msg
+            }
+            sendEmail(error_data, result[0].email, false, 'd-bab01105dc4b46a18a1cc7f24a2b6242');
+        }
+    });
+}
+
 app.get('/', (req, res) => {
-    const url = req.headers.origin.includes('https') ? req.headers.origin.replace('https://','') : req.headers.origin.replace('http://','');
+    const url       = req.headers.origin.includes('https') ? req.headers.origin.replace('https://','') : req.headers.origin.replace('http://','');
+    const adminArea = req.body.adminArea ? true : false;
     console.log(url);
 
     db.query(`SELECT lg.*
@@ -124,6 +164,44 @@ app.get('/', (req, res) => {
                 error:false,
                 msg:'success',
                 life_groups:result,
+            })
+        } else {
+            res.json({
+                error:false,
+                msg:'Sorry, Currently We Don\'t Have Any Life Groups Available'
+            })
+        }
+    });
+})
+
+app.get('/adminArea', (req, res) => {
+    const url       = req.headers.origin.includes('https') ? req.headers.origin.replace('https://','') : req.headers.origin.replace('http://','');
+    console.log(url);
+
+    db.query(`SELECT lg.*
+            FROM churches c
+            LEFT JOIN life_groups lg
+            ON c.ID = lg.church_id
+            WHERE url = ?
+            AND deleted != 1`,
+    [url],
+    (err, result) => {
+        if (err) {
+            console.log(err);
+            res.json({
+                error:true,
+                msg:err
+            });
+        } else if (result.length !== 0) {
+            res.json({
+                error:false,
+                msg:'success',
+                life_groups:result,
+            })
+        } else {
+            res.json({
+                error:false,
+                msg:'Sorry, Currently We Don\'t Have Any Life Groups Available'
             })
         }
     });
@@ -157,6 +235,86 @@ app.post('/logout', (req, res) => {
                 error:false,
                 msg:'logout success',
             })
+        }
+    });
+})
+
+app.post('/updateDisplay', (req, res) => {
+    const groupID = req.body.groupID;
+    const checked = req.body.checked ? 1 : 0;
+
+    db.query(`UPDATE life_groups SET display = ? WHERE ID = ?`,
+    [checked, groupID],
+    (err, result) => {
+        if (err) {
+            console.log(err);
+            res.json({
+                error:true,
+                msg:err
+            });
+        }
+    });
+})
+
+app.post('/joinGroup', (req, res) => {
+    const fullName = req.body.fullName;
+    const email    = req.body.email;
+    const phone    = req.body.phone;
+    const groupID  = parseInt(req.body.groupID);
+
+    db.query(`SELECT lg.group_leader_phone, lg.mobile_carrier_id, lg.email, lg.prefered_contact, lg.church_id, c.URL
+            FROM life_groups lg
+            LEFT JOIN carriers c
+            ON c.ID = lg.mobile_carrier_id
+            WHERE lg.ID = ?`,
+    [groupID],
+    (err, result) => {
+        if (err) {
+            console.log(err);
+            res.json({
+                error:true,
+                msg:err
+            });
+        } else if (result.length !== 0) {
+            const temp_data = {
+                "fullName": fullName,
+                "email": email,
+                "phone": phone,
+            };
+            const prefered_contact = result[0].prefered_contact;
+            const leader_email     = result[0].email;
+            const carrier_url      = result[0].URL;
+            const leader_phone     = result[0].group_leader_phone;
+            switch(prefered_contact) {
+                case 'email':
+                    sendEmail(temp_data, leader_email, res, 'd-4e37b4301b7142e0a29782184b228709');
+                    break;
+                case 'text':
+                    sendEmail(temp_data, `${leader_phone}@${carrier_url}`, res, 'd-4e37b4301b7142e0a29782184b228709');
+                    break;
+                case 'email&text':
+                    const church_id = result[0].church_id;
+                    const error_msg = `life group join sending to leader error. leader email failed to send! user info:${JSON.stringify(temp_data)}`;
+                    sendEmailMultiple(
+                        temp_data,
+                        [`${leader_phone}@${carrier_url}`,leader_email],
+                        res,
+                        'd-4e37b4301b7142e0a29782184b228709',
+                        {church_id:church_id, error_msg:error_msg}
+                    );
+                    break;
+                default:
+                    res.json({
+                        error:true,
+                        msg:'Sorry Life Group Cannot Be Found'
+                    });
+                    break;
+            }
+        } else {
+            res.json({
+                error:true,
+                msg:'There Was An Error Try Again'
+            });
         }
     });
 })

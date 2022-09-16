@@ -14,6 +14,7 @@ import Login from './pages/Login';
 import Logout from './pages/Logout';
 import ValidateEmail from './pages/ValidateEmail';
 import SendVerify from './pages/SendVerify';
+import JoinGroup from './pages/JoinGroup';
 import AdminArea from './pages/AdminArea';
 import NavBar from './NavBar';
 import ResetPass from './pages/ResetPass';
@@ -52,6 +53,7 @@ const App = () => {
           <div id="page-body">
             <Routes>
               <Route path='/' element={<HomePage props={{axios:axios}}/>} exact/>
+              <Route path='/joinGroup' element={<JoinGroup props={{axios:axios}}/>} />
               <Route path='/about' element={<AboutPage/>} />
               <Route path='/adminArea' element={<AdminArea props={{axios:axios, user:user}}/>} />
               <Route path='/login' element={<Login props={{axios:axios, user:user}}/>} />

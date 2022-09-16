@@ -244,3 +244,8 @@ input:focus :-ms-input-placeholder {
 .error-msg {
   color: #cc0000;
 }
+@media (max-width: 400px) {
+  .error-msg {
+    margin-top: 8rem;
+  }
+}
