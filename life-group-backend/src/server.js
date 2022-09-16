@@ -160,6 +160,12 @@ app.get('/', (req, res) => {
                 msg:err
             });
         } else if (result.length !== 0) {
+            // let temp = result.reduce(function (r, a) {
+            //     r[a.category] = r[a.category] || [];
+            //     r[a.category].push(a);
+            //     return r;
+            // }, Object.create(null));
+            // result = temp;
             res.json({
                 error:false,
                 msg:'success',
@@ -239,21 +245,55 @@ app.post('/logout', (req, res) => {
     });
 })
 
-app.post('/updateDisplay', (req, res) => {
-    const groupID = req.body.groupID;
-    const checked = req.body.checked ? 1 : 0;
+app.post('/deleteGroup', (req, res) => {
+    if (req.session.isLoggedIn) {
+        const groupID = req.body.groupID;
+        db.query(`UPDATE life_groups SET deleted = 1 WHERE ID = ?`,
+        [groupID],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                res.json({
+                    error:true,
+                    msg:err
+                });
+            } else {
+                res.json({
+                    error:false,
+                    msg:'Delete Successful'
+                })
+            }
+        });
+    } else {
+        res.json({
+            error:true,
+            msg:'Not Logged In'
+        });
+    }
+})
 
-    db.query(`UPDATE life_groups SET display = ? WHERE ID = ?`,
-    [checked, groupID],
-    (err, result) => {
-        if (err) {
-            console.log(err);
-            res.json({
-                error:true,
-                msg:err
-            });
-        }
-    });
+app.post('/updateDisplay', (req, res) => {
+    if (req.session.isLoggedIn) {
+        const groupID = req.body.groupID;
+        const checked = req.body.checked ? 1 : 0;
+
+        db.query(`UPDATE life_groups SET display = ? WHERE ID = ?`,
+        [checked, groupID],
+        (err, result) => {
+            if (err) {
+                console.log(err);
+                res.json({
+                    error:true,
+                    msg:err
+                });
+            }
+        });
+    } else {
+        res.json({
+            error:true,
+            msg:'Not Logged In'
+        });
+    }
 })
 
 app.post('/joinGroup', (req, res) => {

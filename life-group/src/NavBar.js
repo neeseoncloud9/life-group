@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const NavBar = (user) => {
     const LoggedIn = user.user;
     return (
-        <nav>
+        <nav className='nav justify-content-center'>
             <ul>
                 <li>
                     <Link to="/">life Groups</Link>

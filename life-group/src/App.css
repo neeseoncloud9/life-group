@@ -224,6 +224,10 @@ input:focus :-ms-input-placeholder {
   z-index: -1;
 }
 
+.nav {
+    z-index: 5;
+}
+
 @-webkit-keyframes hue-rotate {
   from {
     -webkit-filter: grayscale(30%) hue-rotate(0deg);

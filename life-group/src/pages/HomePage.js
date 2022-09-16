@@ -55,7 +55,15 @@ const HomePage = (props) => {
                 <tbody>
                     {lifeGroups.map((e, i) => {
                         return (
-                            <tr data-group-makeup={e.group_makeup} data-age-range={e.age_range} data-child-care={e.child_care} key={e.ID}>
+                            <tr
+                                data-group-makeup={e.group_makeup}
+                                data-age-range={e.age_range}
+                                data-child-care={e.child_care}
+                                data-meeting-interval={e.meeting_interval}
+                                data-group-type={e.group_type}
+                                data-day-meet={e.day_meet}
+                                key={e.ID}
+                            >
                                 <td className='col-md-6 col-xs-12'>
                                     {e.name}<br/>
                                     <span className='fs-6 fw-lighter'>{e.co_leader_name ? `Leader: ${e.leader_name} Co-leader: ${e.co_leader_name}` : `Leader: ${e.leader_name}`}</span><br/>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { SuperBalls } from '@uiball/loaders';
 import BootstrapSwitchButton from 'bootstrap-switch-button-react'
@@ -45,6 +45,21 @@ const AdminArea = (props) => {
         });
     }
 
+    const deleteGroup = (groupID) => {
+        _axios.post('http://localhost:3001/deleteGroup',{
+            groupID:groupID,
+        }, {
+            withCredentials: true
+        }).then((result) => {
+            if (result.data.error) {
+                setErr(true);
+                setErrMsg(result.msg);
+            } else if (result.data.msg === 'Delete Successful') {
+                setLoaded(false);
+            }
+        });
+    }
+
     return (
         <>
         {
@@ -68,14 +83,14 @@ const AdminArea = (props) => {
                     {lifeGroups.map((e, i) => {
                         return (
                             <tr data-group-makeup={e.group_makeup} data-age-range={e.age_range} data-child-care={e.child_care} key={e.ID}>
-                                <td className='col-md-6 col-xs-12'>
+                                <td className='col-md-6 col-xs-12' style={{display:'flex'}}>
                                     {e.name}<br/>
                                     <span className='fs-6 fw-lighter'>{e.co_leader_name ? `Leader: ${e.leader_name} Co-leader: ${e.co_leader_name}` : `Leader: ${e.leader_name}`}</span><br/>
                                     <span className='fs-6 fw-lighter'>{e.meeting_interval === 'Weekly' ? `${e.day_meet}'s @${convertTime(e.time_meet)}` : `${e.meeting_interval}: ${e.day_meet} @${convertTime(e.time_meet)}`}</span><br/>
                                     <span className='fs-6 fw-lighter'>{`Location: ${e.location}`}</span><br/>
                                     <span className='fs-6 fw-lighter'>{`Group Type: ${e.group_type}`}</span><br/>
                                 </td>
-                                <td className='col-md-6 col-xs-12 align-middle'>
+                                <td className='col-md-6 col-xs-12 align-middle' style={{display:'flex'}}>
                                     <div className='d-flex justify-content-end'>
                                         <BootstrapSwitchButton
                                             checked={e.display === 1 ? true : false}
@@ -89,6 +104,9 @@ const AdminArea = (props) => {
                                             offstyle='danger'
                                             style="d-flex justify-content-end"
                                         />
+                                    </div>
+                                    <div className='d-flex justify-content-end mt-3'>
+                                        <i className="bi-trash-fill" onClick={() => {deleteGroup(e.ID)}}></i>
                                     </div>
                                 </td>
                             </tr>
